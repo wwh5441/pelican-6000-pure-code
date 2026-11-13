@@ -32,3 +32,4 @@ python3 ./tools/build_single_html.py
 
 - 原创测试命题源头：Simon Willison — *"A pelican riding a bicycle"*
 - 20 幕艺术史命题先行开源项目：[orbitoo/pelican-test](https://github.com/orbitoo/pelican-test)（及同源项目 [RoyceBella-commits/The-Pelican-Test](https://github.com/RoyceBella-commits/The-Pelican-Test)）
+- 开源社区认可与友链：[LINUX DO](https://linux.do/)（真诚、友善、团结、专业，本项目已在 LINUX DO 开源交流发布）
