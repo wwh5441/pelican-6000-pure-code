@@ -78,21 +78,21 @@ export function drawBeakCaliperDiagram(ctx, pelPos, progress, accent = '#e86830'
   ctx.lineTo(beakX1, dimY);
   ctx.stroke();
 
-  const tagW = 148;
-  const tagH = 26;
-  const tagCx = clamp((beakX0 + beakX1) * 0.5, 265, 770 - tagW * 0.5);
-  const tagCy = dimY - 17;
+  const tagW = 192;
+  const tagH = 34;
+  const tagCx = clamp((beakX0 + beakX1) * 0.5, 265, 804 - tagW * 0.5);
+  const tagCy = dimY - 20;
 
-  ctx.fillStyle = isLightBg ? 'rgba(251, 245, 232, 0.95)' : 'rgba(14, 10, 18, 0.90)';
+  ctx.fillStyle = isLightBg ? 'rgba(251, 245, 232, 0.96)' : 'rgba(14, 10, 18, 0.92)';
   ctx.strokeStyle = accent;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1.7;
   ctx.beginPath();
-  ctx.roundRect(tagCx - tagW * 0.5, tagCy - tagH * 0.5, tagW, tagH, 6);
+  ctx.roundRect(tagCx - tagW * 0.5, tagCy - tagH * 0.5, tagW, tagH, 7);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = isLightBg ? '#a62c1c' : accent;
-  ctx.font = '800 15.5px "CarbonMono", "CarbonSans", sans-serif';
+  ctx.font = '800 20.5px "CarbonMono", "CarbonSans", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('「嘴巴 · 188cm」', tagCx, tagCy + 0.5);
@@ -108,24 +108,24 @@ export function drawBeakCaliperDiagram(ctx, pelPos, progress, accent = '#e86830'
   ctx.strokeRect(barX0, barCy - 11, barX1 - barX0, 22);
   ctx.setLineDash([]);
 
-  const barTagW = 132;
-  const barTagH = 24;
-  const barTagX = Math.min(770 - barTagW, barX1 + 14);
+  const barTagW = 172;
+  const barTagH = 32;
+  const barTagX = Math.min(804 - barTagW, barX1 + 14);
   ctx.beginPath();
   ctx.moveTo(barX1, barCy);
   ctx.lineTo(barTagX, barCy);
   ctx.stroke();
 
-  ctx.fillStyle = isLightBg ? 'rgba(248, 241, 226, 0.94)' : 'rgba(14, 11, 18, 0.88)';
-  ctx.strokeStyle = isLightBg ? 'rgba(58, 44, 30, 0.55)' : 'rgba(240, 230, 212, 0.48)';
-  ctx.lineWidth = 1.3;
+  ctx.fillStyle = isLightBg ? 'rgba(248, 241, 226, 0.95)' : 'rgba(14, 11, 18, 0.90)';
+  ctx.strokeStyle = isLightBg ? 'rgba(58, 44, 30, 0.58)' : 'rgba(240, 230, 212, 0.52)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.roundRect(barTagX, barCy - barTagH * 0.5, barTagW, barTagH, 5);
+  ctx.roundRect(barTagX, barCy - barTagH * 0.5, barTagW, barTagH, 6);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = isLightBg ? '#261d15' : '#f5ede0';
-  ctx.font = '700 14px "CarbonMono", "CarbonSans", sans-serif';
+  ctx.font = '800 19px "CarbonMono", "CarbonSans", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('「车把 · 42cm」', barTagX + barTagW * 0.5, barCy + 0.5);
@@ -158,41 +158,41 @@ export function drawPigmentChips(ctx, x, y, progress) {
     { name: '赭石', col: '#9e5a34' },
     { name: '藤黄', col: '#e3a83b' },
   ];
-  const cardX = clamp(x - 100, 188, 790);
+  const cardX = clamp(x - 116, 156, 790);
   ctx.save();
   for (let i = 0; i < chips.length; i += 1) {
     const u = smooth(clamp((progress - i * 0.1) * 3.2, 0, 1));
     if (u <= 0.01) continue;
-    const cy = clamp(y + i * 50 + (1 - u) * 10, 48, 604);
+    const cy = clamp(y + i * 56 + (1 - u) * 10, 60, 594);
     ctx.save();
     ctx.globalAlpha *= u;
 
-    ctx.fillStyle = 'rgba(28, 20, 12, 0.14)';
+    ctx.fillStyle = 'rgba(28, 20, 12, 0.16)';
     ctx.beginPath();
-    ctx.roundRect(cardX + 1.5, cy + 2, 86, 38, 7);
+    ctx.roundRect(cardX + 1.5, cy + 2, 104, 44, 8);
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(250, 243, 229, 0.95)';
-    ctx.strokeStyle = 'rgba(72, 54, 38, 0.56)';
-    ctx.lineWidth = 1.35;
+    ctx.fillStyle = 'rgba(250, 243, 229, 0.96)';
+    ctx.strokeStyle = 'rgba(72, 54, 38, 0.58)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(cardX, cy, 86, 38, 7);
+    ctx.roundRect(cardX, cy, 104, 44, 8);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = chips[i].col;
     ctx.beginPath();
-    ctx.arc(cardX + 19, cy + 19, 9.2, 0, Math.PI * 2);
+    ctx.arc(cardX + 22, cy + 22, 10.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = 'rgba(34, 24, 16, 0.28)';
     ctx.lineWidth = 0.9;
     ctx.stroke();
 
     ctx.fillStyle = '#241b13';
-    ctx.font = '800 17.5px "CarbonKai", "PelicanWenKai", serif';
+    ctx.font = '800 22.5px "CarbonKai", "PelicanWenKai", serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(chips[i].name, cardX + 35, cy + 19.5);
+    ctx.fillText(chips[i].name, cardX + 40, cy + 22.5);
     ctx.restore();
   }
   ctx.restore();
@@ -231,9 +231,8 @@ export function drawRouteTrajectoryArc(ctx, x, bottomRowY, rowWidth, progress, a
 
 export function drawChatBubbleStack(ctx, bubbles, progress, accent = '#d94e1f') {
   if (!bubbles?.length) return;
-  // Strictly inside #17 PeliChat active panel (`[164..796]`) so bubbles never spill onto #18!
-  const rightEdge = 772;
-  const baseY = 152;
+  const rightEdge = 804;
+  const baseY = 148;
 
   ctx.save();
   for (let i = 0; i < bubbles.length; i += 1) {
@@ -241,11 +240,11 @@ export function drawChatBubbleStack(ctx, bubbles, progress, accent = '#d94e1f') 
     if (u <= 0.01) continue;
     const rawTxt = bubbles[i];
     const txt = rawTxt.startsWith('「') ? rawTxt : `「${rawTxt}」`;
-    ctx.font = '800 18.5px "CarbonSans", "PelicanSans", sans-serif';
-    const bw = Math.min(226, Math.ceil(ctx.measureText(txt).width + 26));
-    const bh = 38;
+    ctx.font = '800 22px "CarbonSans", "PelicanSans", sans-serif';
+    const bw = Math.min(258, Math.ceil(ctx.measureText(txt).width + 28));
+    const bh = 44;
     const bx = rightEdge - bw;
-    const by = clamp(baseY + i * 46 + (1 - u) * 12, 60, 602);
+    const by = clamp(baseY + i * 52 + (1 - u) * 12, 64, 596);
     const isLast = i === bubbles.length - 1;
 
     ctx.save();
@@ -289,19 +288,19 @@ export function drawAngledHistoryCards(ctx, progress, isLightBg = false) {
     ctx.globalAlpha *= u * 0.92;
     ctx.translate(n.x, n.y);
     ctx.rotate(n.rot);
-    ctx.font = '700 15.5px "CarbonMono", "CarbonSans", sans-serif';
-    const w = Math.min(246, ctx.measureText(n.t).width + 26);
+    ctx.font = '800 19.5px "CarbonMono", "CarbonSans", sans-serif';
+    const w = Math.min(292, ctx.measureText(n.t).width + 28);
 
-    ctx.fillStyle = 'rgba(18, 24, 34, 0.18)';
+    ctx.fillStyle = 'rgba(18, 24, 34, 0.20)';
     ctx.beginPath();
-    ctx.roundRect(-w * 0.5 + 2, -16 + 2.5, w, 33, 8);
+    ctx.roundRect(-w * 0.5 + 2, -20 + 2.5, w, 40, 9);
     ctx.fill();
 
-    ctx.fillStyle = isLightBg ? 'rgba(255, 249, 224, 0.96)' : 'rgba(20, 16, 13, 0.88)';
-    ctx.strokeStyle = isLightBg ? 'rgba(168, 118, 42, 0.65)' : 'rgba(232, 184, 118, 0.58)';
-    ctx.lineWidth = 1.4;
+    ctx.fillStyle = isLightBg ? 'rgba(255, 249, 224, 0.96)' : 'rgba(20, 16, 13, 0.90)';
+    ctx.strokeStyle = isLightBg ? 'rgba(168, 118, 42, 0.68)' : 'rgba(232, 184, 118, 0.62)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(-w * 0.5, -16, w, 33, 8);
+    ctx.roundRect(-w * 0.5, -20, w, 40, 9);
     ctx.fill();
     ctx.stroke();
 
@@ -389,12 +388,12 @@ export function drawInteractivePillButton(ctx, cx, cy, line, progress, anvil, ac
   ctx.translate(cx, safeCy);
   ctx.scale(pressScale, pressScale);
 
-  const bw = 452;
-  const bh = 72;
+  const bw = 524;
+  const bh = 80;
 
   ctx.fillStyle = 'rgba(0, 0, 0, 0.50)';
   ctx.beginPath();
-  ctx.roundRect(-bw * 0.5 + 2.5, -bh * 0.5 + 4.5, bw, bh, 36);
+  ctx.roundRect(-bw * 0.5 + 2.5, -bh * 0.5 + 4.5, bw, bh, 40);
   ctx.fill();
 
   const bg = ctx.createLinearGradient(0, -bh * 0.5, 0, bh * 0.5);
@@ -402,22 +401,22 @@ export function drawInteractivePillButton(ctx, cx, cy, line, progress, anvil, ac
   bg.addColorStop(1, accent);
   ctx.fillStyle = bg;
   ctx.strokeStyle = secondHalfLit > 0.3 ? 'rgba(255, 246, 216, 0.92)' : 'rgba(255, 242, 224, 0.74)';
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 2.4;
   ctx.beginPath();
-  ctx.roundRect(-bw * 0.5, -bh * 0.5, bw, bh, 36);
+  ctx.roundRect(-bw * 0.5, -bh * 0.5, bw, bh, 40);
   ctx.fill();
   ctx.stroke();
 
   // Crisp 4K Pelican bicycle icon badge on left side of button
   ctx.save();
-  ctx.translate(-bw * 0.5 + 54, 0);
+  ctx.translate(-bw * 0.5 + 58, 0);
   ctx.strokeStyle = '#fff9f0';
-  ctx.lineWidth = 2.9;
+  ctx.lineWidth = 3.1;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.arc(-14, 7, 8.8, 0, Math.PI * 2);
-  ctx.arc(14, 7, 8.8, 0, Math.PI * 2);
+  ctx.arc(-14, 7, 9.2, 0, Math.PI * 2);
+  ctx.arc(14, 7, 9.2, 0, Math.PI * 2);
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(-14, 7);
@@ -433,7 +432,7 @@ export function drawInteractivePillButton(ctx, cx, cy, line, progress, anvil, ac
   const p0 = parts[0] || '那只鸟';
   const p1 = parts[1] || '还在跑';
 
-  ctx.font = '900 41px "CarbonSans", "PelicanSans", sans-serif';
+  ctx.font = '900 48px "CarbonSans", "PelicanSans", sans-serif';
   ctx.textBaseline = 'middle';
   const w0 = ctx.measureText(p0).width;
   const gap = 18;

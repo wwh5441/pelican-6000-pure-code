@@ -276,17 +276,17 @@ function drawPictureLampFixture(kit, ctx, tx, ty) {
 
 function getBakedMicroPlaque(kit, scene) {
   return kit.bake2D(
-    `outro_micro_plaque_r3_${scene.id}`,
+    `outro_micro_plaque_r4_${scene.id}`,
     (_g, ctx) => {
-      ctx.clearRect(0, 0, 240, 54);
+      ctx.clearRect(0, 0, 288, 60);
       ctx.save();
-      ctx.scale(6, 6); // 40x9 logical space (38x7 plaque + 1.1px shadow)
-      const pw = 38;
-      const ph = 7;
+      ctx.scale(6, 6); // 48x10 logical space (46x8.2 plaque + 1.1px shadow)
+      const pw = 46;
+      const ph = 8.2;
       const px = 0.5;
       const py = 0.5;
 
-      ctx.fillStyle = 'rgba(5, 4, 3, 0.62)';
+      ctx.fillStyle = 'rgba(5, 4, 3, 0.66)';
       ctx.fillRect(px + 0.9, py + 1.1, pw, ph);
 
       const bg = ctx.createLinearGradient(px, py, px + pw, py + ph);
@@ -318,29 +318,29 @@ function getBakedMicroPlaque(kit, scene) {
       }
 
       const label = `${String(scene.num).padStart(2, '0')} · ${scene.zh}`;
-      ctx.fillStyle = '#24190b';
-      ctx.font = '700 2.9px "PelicanSerif", serif';
+      ctx.fillStyle = '#201508';
+      ctx.font = '800 3.55px "PelicanSerif", serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(label, px + pw * 0.5, py + ph * 0.53);
       ctx.restore();
     },
-    240,
-    54
+    288,
+    60
   );
 }
 
 function drawMuseumMicroPlaque(kit, ctx, tx, ty, scene, outroT) {
   const plG = getBakedMicroPlaque(kit, scene);
-  const px = tx + (TILE_SIZE - 38) * 0.5;
-  const py = ty + TILE_SIZE + 5.8;
-  ctx.drawImage(plG.canvas, px - 0.5, py - 0.5, 40, 9);
+  const px = tx + (TILE_SIZE - 46) * 0.5;
+  const py = ty + TILE_SIZE + 5.6;
+  ctx.drawImage(plG.canvas, px - 0.5, py - 0.5, 48, 10);
 
-  // Subtle travelling brass specular glint bar (38x7px glint!)
+  // Subtle travelling brass specular glint bar
   const glintA = Math.max(0, Math.sin(outroT * 0.85 + scene.index * 0.42)) * 0.14;
   if (glintA > 0.01) {
     ctx.fillStyle = `rgba(255, 245, 205, ${glintA.toFixed(3)})`;
-    ctx.fillRect(px + 2, py + 0.6, 34, 2.0);
+    ctx.fillRect(px + 2, py + 0.6, 42, 2.2);
   }
 }
 
@@ -410,8 +410,8 @@ function drawSlot21MitredGiltFrame(ctx, tx, ty, size, flashStrength = 0) {
 // =============================================================================
 
 function computeCurtainFlutter(xNorm, outroT) {
-  // Traveling aerodynamic wake wave sweeping left -> right as pelican rockets past (10.80..11.68s)
-  const waveStart = 10.80 + xNorm * 0.28;
+  // Traveling aerodynamic wake wave sweeping left -> right as pelican rockets past (8.72..9.60s)
+  const waveStart = 8.72 + xNorm * 0.28;
   const age = outroT - waveStart;
   if (age <= 0 || age > 0.78) return 0;
   const env = Math.sin(Math.min(1, age / 0.14) * (Math.PI * 0.5)) * Math.exp(-age * 4.6);
@@ -527,14 +527,14 @@ function drawRearCorridor(ctx, flashInfo) {
 }
 
 function drawStreakingPelicanAndBell(ctx, outroT) {
-  // 1. Fluttering press-release sheets kicked up in the rear corridor wake (10.86..11.74s)
-  if (outroT >= 10.86 && outroT <= 11.74) {
+  // 1. Fluttering press-release sheets kicked up in the rear corridor wake (8.78..9.66s)
+  if (outroT >= 8.78 && outroT <= 9.66) {
     const sheets = [
-      { t0: 10.86, x0: 235, y0: 545, vx: 165, vy: -95, rot0: -0.25, spin: 5.4, w: 28, h: 20 },
-      { t0: 10.91, x0: 345, y0: 525, vx: 195, vy: -118, rot0: 0.35, spin: -6.2, w: 31, h: 22 },
-      { t0: 10.97, x0: 635, y0: 538, vx: 185, vy: -105, rot0: -0.4, spin: 6.8, w: 30, h: 21 },
-      { t0: 11.01, x0: 705, y0: 512, vx: 155, vy: -84, rot0: 0.2, spin: -5.1, w: 26, h: 18 },
-      { t0: 11.04, x0: 765, y0: 548, vx: 145, vy: -76, rot0: -0.15, spin: 4.5, w: 27, h: 19 },
+      { t0: 8.78, x0: 235, y0: 545, vx: 165, vy: -95, rot0: -0.25, spin: 5.4, w: 28, h: 20 },
+      { t0: 8.83, x0: 345, y0: 525, vx: 195, vy: -118, rot0: 0.35, spin: -6.2, w: 31, h: 22 },
+      { t0: 8.89, x0: 635, y0: 538, vx: 185, vy: -105, rot0: -0.4, spin: 6.8, w: 30, h: 21 },
+      { t0: 8.93, x0: 705, y0: 512, vx: 155, vy: -84, rot0: 0.2, spin: -5.1, w: 26, h: 18 },
+      { t0: 8.96, x0: 765, y0: 548, vx: 145, vy: -76, rot0: -0.15, spin: 4.5, w: 27, h: 19 },
     ];
     for (const s of sheets) {
       const dt = outroT - s.t0;
@@ -572,9 +572,9 @@ function drawStreakingPelicanAndBell(ctx, outroT) {
     }
   }
 
-  // 2. Streaking Pelican on Bicycle (10.76..11.28s; at t=136.02s -> streakX ≈ 692.5 in open right corridor!)
-  if (outroT >= 10.76 && outroT <= 11.28) {
-    const u = (outroT - 10.76) / 0.48;
+  // 2. Streaking Pelican on Bicycle (8.68..9.22s; realT ≈ 167.42..168.60s right before Center File-Size Reveal!)
+  if (outroT >= 8.68 && outroT <= 9.22) {
+    const u = (outroT - 8.68) / 0.50;
     const streakX = lerp(-120, 1380, u);
     const groundY = 602;
     const rigScale = 1.06;
@@ -704,9 +704,9 @@ function drawStreakingPelicanAndBell(ctx, outroT) {
 }
 
 function drawAcousticBellRipples(ctx, outroT) {
-  // Luminous Golden Concentric Acoustic Bell Ripples right on final strong beat (11.00..11.96s)!
-  if (outroT < 11.0 || outroT > 11.96) return;
-  const bellAge = outroT - 11.0;
+  // Luminous Golden Concentric Acoustic Bell Ripples right as Pelican rockets past (8.90..9.86s)!
+  if (outroT < 8.90 || outroT > 9.86) return;
+  const bellAge = outroT - 8.90;
   const bellAlpha = Math.pow(Math.max(0, 1 - bellAge / 0.96), 1.2);
   const bx = 740;
   const by = 452;
@@ -1240,8 +1240,8 @@ function drawConferenceTableAndRefreshments(ctx, outroT, flashInfo) {
   const trayCx = 814;
   const trayCy = 638;
   const waterTremor =
-    outroT >= 10.95 && outroT <= 11.55
-      ? Math.sin((outroT - 10.95) * 34) * Math.exp(-(outroT - 10.95) * 4.5) * 1.1
+    outroT >= 8.86 && outroT <= 9.48
+      ? Math.sin((outroT - 8.86) * 34) * Math.exp(-(outroT - 8.86) * 4.5) * 1.1
       : 0;
 
   // Soft reflection on polished walnut surface
@@ -1621,11 +1621,11 @@ function drawTentCardNameplate(ctx, outroT, flashInfo) {
   const cx = 500;
   const fStr = flashInfo.strength;
 
-  // Slipstream paper-card micro-tremble as pelican blasts past in rear corridor (10.95..11.60s)
+  // Slipstream paper-card micro-tremble as pelican blasts past in rear corridor (8.86..9.52s)
   let dxTremble = 0;
   let rotTremble = 0;
-  if (outroT >= 10.95 && outroT <= 11.60) {
-    const dt = outroT - 10.95;
+  if (outroT >= 8.86 && outroT <= 9.52) {
+    const dt = outroT - 8.86;
     const env = Math.sin(Math.min(1, dt / 0.08) * (Math.PI * 0.5)) * Math.exp(-dt * 5.2);
     dxTremble = env * Math.cos(dt * 38) * 3.2 + env * 1.8;
     rotTremble = env * Math.sin(dt * 42) * 0.012;
@@ -1978,7 +1978,7 @@ export function renderOutro(kit, overlayG, t, renderSceneFn) {
   const galleryZoom = 0.495; // 1710 * 0.495 = 846px wide inside 960px 4:3 frame
   const pullBackU = smootherstep(0.08, 1.85, outroT);
   const curGapX = lerp(0, TILE_GAP, pullBackU);
-  const pushInU = smootherstep(4.2, 8.0, outroT);
+  const pushInU = smootherstep(3.8, 6.6, outroT);
 
   const startScreenY = VIEW_H * 0.5 + (500 - DEFAULT_CAM_Y) * BASE_PANEL_SCALE; // 331.4px exact match!
   const screenPivotY = lerp(startScreenY, 322, pullBackU);
@@ -1995,11 +1995,11 @@ export function renderOutro(kit, overlayG, t, renderSceneFn) {
 
   // Directional camera flash envelope on strong beats during push-in
   const flashSpecs = [
-    { ft: 4.5, ox: 165, oy: 1035 },
-    { ft: 5.5, ox: 776, oy: 1025 },
-    { ft: 6.4, ox: 118, oy: 1030 },
-    { ft: 7.1, ox: 368, oy: 1040 },
-    { ft: 7.8, ox: 868, oy: 1025 },
+    { ft: 4.1, ox: 165, oy: 1035 },
+    { ft: 4.9, ox: 776, oy: 1025 },
+    { ft: 5.7, ox: 118, oy: 1030 },
+    { ft: 6.4, ox: 368, oy: 1040 },
+    { ft: 7.1, ox: 868, oy: 1025 },
   ];
   let flashInfo = { strength: 0, originX: 500, originY: 1030 };
   for (const sp of flashSpecs) {
@@ -2210,14 +2210,14 @@ export function renderOutro(kit, overlayG, t, renderSceneFn) {
   }
   ctx.restore();
 
-  // Documentary Epilogue Subtitles (shown only AFTER sung outro lines conclude around outroT=6.4s,
-  // so they NEVER collide with Kinetic Lyrics!)
-  const sub1Alpha = smoothstep(6.45, 6.95, outroT) * (1 - smoothstep(8.85, 9.25, outroT));
+  // Documentary Epilogue Subtitles (shown AFTER sung outro lines conclude around outroT=6.05s,
+  // and fading cleanly at outroT=9.34s right as the Post-Pelican File-Size Monument expands!)
+  const sub1Alpha = smoothstep(6.10, 6.46, outroT) * (1 - smoothstep(7.35, 7.64, outroT));
   if (sub1Alpha > 0.005) {
     drawCenteredSubtitle(ctx, '「截至目前，人类共提交了 20 份答卷。」', sub1Alpha);
   }
 
-  const sub2Alpha = smoothstep(9.30, 9.75, outroT) * (1 - smoothstep(11.68, 11.98, outroT));
+  const sub2Alpha = smoothstep(7.68, 8.04, outroT) * (1 - smoothstep(9.08, 9.34, outroT));
   if (sub2Alpha > 0.005) {
     drawCenteredSubtitle(ctx, '「鹈鹕本人对此尚未发表评论。」', sub2Alpha);
   }
@@ -2228,23 +2228,23 @@ export function renderOutro(kit, overlayG, t, renderSceneFn) {
 function drawCenteredSubtitle(ctx, text, alpha) {
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.font = '600 22px "PelicanSerif", serif';
+  ctx.font = '800 30px "PelicanSerif", "CarbonSerif", serif';
   const tw = ctx.measureText(text).width;
-  const padX = 22;
-  const boxH = 44;
+  const padX = 28;
+  const boxH = 58;
   const bx = (VIEW_W - tw) / 2 - padX;
-  const by = VIEW_H - 76;
+  const by = VIEW_H - 86;
   const bw = tw + padX * 2;
 
-  ctx.fillStyle = 'rgba(10, 9, 8, 0.86)';
-  ctx.strokeStyle = 'rgba(214, 184, 128, 0.52)';
-  ctx.lineWidth = 1.3;
+  ctx.fillStyle = 'rgba(10, 9, 8, 0.90)';
+  ctx.strokeStyle = 'rgba(226, 192, 128, 0.68)';
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.roundRect(bx, by, bw, boxH, 6);
+  ctx.roundRect(bx, by, bw, boxH, 9);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = '#f8f2e4';
+  ctx.fillStyle = '#fff9ec';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, VIEW_W / 2, by + boxH / 2 + 1);

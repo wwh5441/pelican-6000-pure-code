@@ -202,7 +202,7 @@ function drawSvgMarkupOverlay(ctx, x, w, h, realT) {
   ctx.save();
   ctx.fillStyle = 'rgba(14, 12, 18, 0.76)';
   ctx.fillRect(x, 0, w, h);
-  ctx.font = '700 21px "CarbonMono", monospace';
+  ctx.font = '800 25px "CarbonMono", monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   const scrollY = (realT * 12) % 36;
@@ -228,18 +228,26 @@ export function renderEraAccordionStage(
   stageH,
   slats,
   handoffU = 0,
-  enterU = 1
+  enterU = 1,
+  handoffTarget = null
 ) {
   // Full-Screen (`960x720`) live-pedaling Pelican spanning across all 12 vertical era slats!
-  // During `enterU` (`0 -> 1` across `3.55s .. 4.35s`), the Pelican rides grandly in from the right
-  // behind the sweeping `/` diagonal curtain to occupy full center stage (`x = 480, scale = 1.72`),
-  // then smoothly glides into Scene 01's road position (`x = 190, scale = 0.72`) as `handoffU -> 1`!
+  // Smoothly locks 1:1 onto Scene 01's exact live Pelican coordinate `(targetX, targetY, targetScale)`
+  // while Drawer #01 dissolves open onto the real continuous Sahara cave wall underneath (zero double Pelican!).
   const enterEase = 1 - Math.pow(1 - clamp01(enterU), 2.5);
   const rideOffsetX = (1 - enterEase) * stageW * 0.38;
-  const pelX = (stageX0 + stageW * 0.50 + rideOffsetX) * (1 - handoffU) + 190 * handoffU;
-  const pelY = (stageH * 0.865) * (1 - handoffU) + 516 * handoffU;
-  const pelScale = (1.52 + 0.20 * enterEase) * (1 - handoffU) + 0.72 * handoffU;
-  const pedalAngle = realT * 4.6;
+  const targetX = handoffTarget?.x ?? 480;
+  const targetY = handoffTarget?.y ?? 458.6;
+  const targetScale = handoffTarget?.scale ?? 0.632;
+  const targetPedal = handoffTarget?.pedalAngle ?? realT * 4.6;
+  const pelLockU = clamp01(handoffU / 0.82);
+  const pelSmoothU = pelLockU * pelLockU * (3 - 2 * pelLockU);
+
+  const pelX = (stageX0 + stageW * 0.50 + rideOffsetX) * (1 - pelSmoothU) + targetX * pelSmoothU;
+  const pelY = (stageH * 0.865) * (1 - pelSmoothU) + targetY * pelSmoothU;
+  const pelScale = (1.52 + 0.20 * enterEase) * (1 - pelSmoothU) + targetScale * pelSmoothU;
+  const pedalAngle = (realT * 4.6) * (1 - pelSmoothU) + targetPedal * pelSmoothU;
+  const pelOverlayAlpha = handoffTarget?.pelicanOverlayAlpha ?? 1;
 
   const rig = computePelicanRig({
     x: pelX,
@@ -247,7 +255,7 @@ export function renderEraAccordionStage(
     pedalAngle,
     wheelAngle: realT * 5.2,
     scale: pelScale,
-    speedScale: 0.85,
+    speedScale: 0.85 * (1 - pelSmoothU) + (handoffTarget?.speedScale ?? 1.0) * pelSmoothU,
     time: realT,
   });
 
@@ -260,15 +268,21 @@ export function renderEraAccordionStage(
     ctx.rect(s.x, 0, s.w, stageH);
     ctx.clip();
 
-    // 1. Draw genuine 960x720 era artwork slice (`crop top 93% so internal panel labels stay hidden`)
+    // 1. Draw genuine 960x720 era artwork slice (for Drawer #01, dissolve cleanly into live WebGL Sahara underneath!)
     const bgCnv = kit.introEraBgCache?.get(s.sceneId);
-    if (bgCnv) {
+    const slatBgAlpha = i === 0 && handoffU > 0.001
+      ? Math.max(0, 1 - clamp01((handoffU - 0.02) / 0.58))
+      : 1;
+    if (bgCnv && slatBgAlpha > 0.004) {
+      ctx.save();
+      ctx.globalAlpha *= slatBgAlpha;
       const normCenter = (s.x + s.w * 0.5 - stageX0) / Math.max(1, stageW);
       const drawW = Math.max(s.w, 960 * (0.76 + handoffU * 0.24));
       const drawX = s.x + s.w * 0.5 - drawW * clamp01(0.18 + normCenter * 0.64);
       const finalX = handoffU > 0.01 && i === 0 ? 0 : drawX;
       const finalW = handoffU > 0.01 && i === 0 ? Math.max(drawW, 960) : drawW;
       ctx.drawImage(bgCnv, 0, 0, 960, 668, finalX, 0, finalW, stageH);
+      ctx.restore();
     }
 
     // Special right-most SVG source-code slat (`#20 2026`, direct homage to reference image!)
@@ -277,24 +291,27 @@ export function renderEraAccordionStage(
     }
 
     // 2. Render continuous Pelican + Bicycle clipped inside THIS drawer's era style!
-    // (No expensive software shadowBlur — crisp dual-pass neon stroke keeps 60fps locked!)
     const pStyle = ERA_PELICAN_STYLES[s.style] || ERA_PELICAN_STYLES.ukiyoe;
-    ctx.save();
-    drawRig2D(ctx, rig, pStyle);
-    if (pStyle.glow) {
-      drawRig2D(ctx, rig, { wireframeColor: '#e6fff0', lineScale: 0.52 });
-    }
-    if (pStyle.impasto && rig.bodyCenter) {
-      ctx.strokeStyle = '#fff9d6';
-      ctx.lineWidth = 3.2;
-      for (let k = -2; k <= 2; k += 1) {
-        ctx.beginPath();
-        ctx.moveTo(rig.bodyCenter.x - 24, rig.bodyCenter.y + k * 7);
-        ctx.lineTo(rig.bodyCenter.x - 6, rig.bodyCenter.y + k * 7 - 3);
-        ctx.stroke();
+    const thisPelAlpha = i === 0 ? pelOverlayAlpha : 1;
+    if (thisPelAlpha > 0.004) {
+      ctx.save();
+      ctx.globalAlpha *= thisPelAlpha;
+      drawRig2D(ctx, rig, pStyle);
+      if (pStyle.glow) {
+        drawRig2D(ctx, rig, { wireframeColor: '#e6fff0', lineScale: 0.52 });
       }
+      if (pStyle.impasto && rig.bodyCenter) {
+        ctx.strokeStyle = '#fff9d6';
+        ctx.lineWidth = 3.2;
+        for (let k = -2; k <= 2; k += 1) {
+          ctx.beginPath();
+          ctx.moveTo(rig.bodyCenter.x - 24, rig.bodyCenter.y + k * 7);
+          ctx.lineTo(rig.bodyCenter.x - 6, rig.bodyCenter.y + k * 7 - 3);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
     }
-    ctx.restore();
 
     // Subtle gallery spotlight lift on the currently expanded accordion drawer
     if (s.focus > 0.2 && handoffU < 0.5) {

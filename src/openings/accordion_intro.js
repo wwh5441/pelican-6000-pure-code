@@ -114,27 +114,27 @@ function drawAccordionSeamsAndLabels(ctx, slats, stageH, isEraMode, handoffU) {
     if (footerFade > 0.02) {
       ctx.save();
       ctx.globalAlpha = footerFade;
-      const botG = ctx.createLinearGradient(0, stageH - 82, 0, stageH);
+      const botG = ctx.createLinearGradient(0, stageH - 104, 0, stageH);
       botG.addColorStop(0, 'rgba(12, 10, 8, 0)');
-      botG.addColorStop(0.55, 'rgba(12, 10, 8, 0.74)');
-      botG.addColorStop(1, 'rgba(9, 7, 5, 0.92)');
+      botG.addColorStop(0.52, 'rgba(12, 10, 8, 0.80)');
+      botG.addColorStop(1, 'rgba(9, 7, 5, 0.95)');
       ctx.fillStyle = botG;
-      ctx.fillRect(s.x, stageH - 82, s.w, 82);
+      ctx.fillRect(s.x, stageH - 104, s.w, 104);
 
-      if (s.w >= 34) {
+      if (s.w >= 40) {
         const cx = s.x + s.w * 0.5;
         const active = s.focus > 0.52;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        ctx.fillStyle = active ? '#f6d282' : 'rgba(220, 204, 180, 0.74)';
-        ctx.font = `${active ? 800 : 700} 13.5px "CarbonMono", monospace`;
-        ctx.fillText(s.num, cx, stageH - 41);
+        ctx.fillStyle = active ? '#ffd884' : 'rgba(232, 216, 190, 0.84)';
+        ctx.font = `${active ? 900 : 800} 19px "CarbonMono", monospace`;
+        ctx.fillText(s.num, cx, stageH - 52);
 
-        if (s.w >= 50) {
-          ctx.fillStyle = active ? '#fff7e6' : 'rgba(236, 224, 204, 0.86)';
-          ctx.font = `${active ? 800 : 600} 13.5px "CarbonSans", sans-serif`;
-          ctx.fillText(s.year, cx, stageH - 18);
+        if (s.w >= 58) {
+          ctx.fillStyle = active ? '#fff9eb' : 'rgba(244, 232, 212, 0.92)';
+          ctx.font = `${active ? 800 : 700} 18px "CarbonSans", sans-serif`;
+          ctx.fillText(s.year, cx, stageH - 22);
         }
       }
       ctx.restore();
@@ -150,7 +150,8 @@ export function renderAccordionIntroOverlay(
   forgeTimeline,
   _svgBank,
   accordionDoc,
-  drawerState = null
+  drawerState = null,
+  handoffTarget = null
 ) {
   const handoffStart = accordionDoc?.handoffStartRealT ?? 10.02;
   const handoffEnd = accordionDoc?.handoffEndRealT ?? 11.447;
@@ -169,8 +170,8 @@ export function renderAccordionIntroOverlay(
   const basePanelW = accordionDoc?.leftPanelWidth ?? 344;
   const guitarDropT = accordionDoc?.guitarDropRealT ?? 3.668;
 
-  const handoffU = smootherstep(handoffStart, handoffEnd - 0.08, realT);
-  const fadeOutAlpha = 1 - smootherstep(handoffEnd - 0.52, handoffEnd, realT);
+  const handoffU = smootherstep(handoffStart, handoffEnd - 0.04, realT);
+  const fadeOutAlpha = 1 - smootherstep(handoffEnd - 0.14, handoffEnd, realT);
   if (fadeOutAlpha <= 0.004) {
     if (drawerState) {
       drawerState.lastForgeSlats = null;
@@ -221,7 +222,7 @@ export function renderAccordionIntroOverlay(
       drawerState.lastEraSlats = eraWipeU >= 0.5 && handoffU < 0.25 ? eSlats : null;
     }
 
-    renderEraAccordionStage(ctx, kit, realT, 0, VIEW_W, VIEW_H, eSlats, handoffU, eraWipeU);
+    renderEraAccordionStage(ctx, kit, realT, 0, VIEW_W, VIEW_H, eSlats, handoffU, eraWipeU, handoffTarget);
     drawAccordionSeamsAndLabels(ctx, eSlats, VIEW_H, true, handoffU);
 
     if (eraWipeU < 0.996) {

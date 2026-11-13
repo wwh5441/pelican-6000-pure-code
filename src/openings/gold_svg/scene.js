@@ -10,6 +10,7 @@ import { computeGoldForgePose } from './kinematics.js';
 import { buildHearthAndAnvilGroup } from './hearth_and_anvil.js';
 import { buildLeftMasterSmithGroup } from './smith_left.js';
 import { buildRightStrikerSmithGroup } from './smith_right.js';
+import { CREST_PATH_D } from '../vector_emblems.js';
 
 const GRID_TO_STAGE_TRANSFORM = 'translate(34, -496) scale(1.22)';
 
@@ -79,6 +80,33 @@ export function createGoldPrintmakingForgeSvg(svgRoot, stageW = 616, stageH = 72
   // 5. Two Crisp `/` Diagonal Gold Hairline Seams (`(363,0)->(113,720)` & `(478,0)->(251,720)`)
   const seamLine1 = el('line', { stroke: '#e8b35a', 'stroke-width': '2.1', opacity: '0.92' }, slideContent);
   const seamLine2 = el('line', { stroke: '#e8b35a', 'stroke-width': '2.1', opacity: '0.92' }, slideContent);
+
+  // 5.5. Pure-vector right-side continuation of Cover Double Gold Frame & `羽轮纹章` Corner Emblems
+  //      (`stageX0 = 344` => `x_local = x_global - 344`) — 100% vector SVG paths, zero `.png`!
+  const coverFrameG = el('g', { fill: 'none', stroke: '#c6a363', 'pointer-events': 'none' }, slideContent);
+  el('rect', { x: '-315.92', y: '28.08', width: '903.84', height: '663.84', 'stroke-width': '0.85' }, coverFrameG);
+  el('rect', { x: '-307.28', y: '36.72', width: '886.56', height: '646.56', 'stroke-width': '0.50' }, coverFrameG);
+  const crestScale = (28.8 / 256).toFixed(6);
+  for (const cy of [43.92, 647.28]) {
+    const cg = el(
+      'g',
+      {
+        transform: `translate(543.28, ${cy}) scale(${crestScale})`,
+        opacity: '0.96',
+        'pointer-events': 'none',
+      },
+      slideContent
+    );
+    el(
+      'path',
+      {
+        d: CREST_PATH_D,
+        fill: 'url(#gf-crest-gold)',
+        'fill-rule': 'evenodd',
+      },
+      cg
+    );
+  }
 
   // 6. Glowing `/` Golden Curtain-Edge Bevel Seam that sweeps right-to-left during `wipeU > 0`!
   const shutterGlowLine = el(

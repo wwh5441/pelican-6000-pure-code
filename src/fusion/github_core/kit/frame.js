@@ -342,64 +342,85 @@ function drawStraddlingTallySealHalf(ctx, halfSide, seamCx, topCy, sealW, sealH,
 // 3. Family 1 — `stone_arch` (#01 Sahara, #02 Egypt, #03 Han)
 // =============================================================================
 
-function bakeSaharaFrame(ctx, rng) {
-  // #01 Tassili n'Ajjer Chipped Ferruginous Sandstone Ledge (inward <= 10.5px, left outer rock edge allowed)
-  const ox0 = OX - 10; // #01 has no left neighbor panel!
-  const ox1 = OX + PW;
+function bakeSaharaFrame(ctx, rng, halfMode = 'right_open_left') {
+  // Continuous 2000px Sahara Cave Wall (`[-1000, +1000]`):
+  // - `s01_sahara` (`right_open_left`): top + bottom + right border at `x = 1000`; OPEN at `x = 0`!
+  // - `s01_sahara_pre` (`left_open_right`): top + bottom + left border at `x = -1000`; OPEN at `x = 0`!
+  const openLeft = halfMode === 'right_open_left';
+  const openRight = halfMode === 'left_open_right';
+
+  const ox0 = openLeft ? OX : OX - 10;
+  const ox1 = openRight ? OX + PW : OX + PW;
   const oy0 = OY - 10;
   const oy1 = OY + PH + 7;
 
-  drawWallDropShadow(ctx, ox0 + 2, ox1, oy1, OY + PH + 9, 0.32);
+  drawWallDropShadow(ctx, ox0, ox1, oy1, OY + PH + 9, 0.32);
 
-  // Build organic hand-knapped inner rock aperture (`[6.5..10.5px]` inward)
   const innerPts = [];
   const N = 44;
-  // Top edge (left -> right)
+  // Top edge (left -> right; pinned to `OY + 8.2` at `x = 0` seam so both halves join flush!)
   for (let i = 0; i <= N; i++) {
     const u = i / N;
-    const wob = Math.sin(u * 19.3) * 1.4 + (rng() - 0.5) * 2.0;
+    const seamFade = openLeft ? Math.min(1, u * 6) : openRight ? Math.min(1, (1 - u) * 6) : 1;
+    const wob = (Math.sin(u * 19.3) * 1.4 + (rng() - 0.5) * 2.0) * seamFade;
     innerPts.push([OX + u * PW, OY + 8.2 + wob]);
   }
-  // Right edge (top -> bottom, gentle notch around road y=680)
-  for (let i = 1; i <= N; i++) {
-    const u = i / N;
-    const py = OY + u * PH;
-    const roadOpen = Math.exp(-Math.pow((u * PH - 680) / 56, 2)) * 2.4;
-    const wob = Math.cos(u * 23.1) * 1.3 + (rng() - 0.5) * 1.8;
-    innerPts.push([OX + PW - (8.4 - roadOpen + wob), py]);
+  // Right edge (top -> bottom)
+  if (openRight) {
+    innerPts.push([OX + PW + 2, OY + PH - 8.0]);
+  } else {
+    for (let i = 1; i <= N; i++) {
+      const u = i / N;
+      const py = OY + u * PH;
+      const roadOpen = Math.exp(-Math.pow((u * PH - 680) / 56, 2)) * 2.4;
+      const wob = Math.cos(u * 23.1) * 1.3 + (rng() - 0.5) * 1.8;
+      innerPts.push([OX + PW - (8.4 - roadOpen + wob), py]);
+    }
   }
-  // Bottom edge (right -> left)
+  // Bottom edge (right -> left; pinned to `OY + PH - 8.0` at `x = 0` seam!)
   for (let i = 1; i <= N; i++) {
     const u = 1 - i / N;
-    const wob = Math.sin(u * 17.7 + 1.2) * 1.4 + (rng() - 0.5) * 1.9;
+    const seamFade = openLeft ? Math.min(1, u * 6) : openRight ? Math.min(1, (1 - u) * 6) : 1;
+    const wob = (Math.sin(u * 17.7 + 1.2) * 1.4 + (rng() - 0.5) * 1.9) * seamFade;
     innerPts.push([OX + u * PW, OY + PH - (8.0 + wob)]);
   }
   // Left edge (bottom -> top)
-  for (let i = 1; i < N; i++) {
-    const u = 1 - i / N;
-    const roadOpen = Math.exp(-Math.pow((u * PH - 680) / 56, 2)) * 2.4;
-    const wob = Math.sin(u * 21.4 + 2.4) * 1.4 + (rng() - 0.5) * 1.9;
-    innerPts.push([OX + (8.6 - roadOpen + wob), OY + u * PH]);
+  if (openLeft) {
+    innerPts.push([OX - 2, OY + 8.2]);
+  } else {
+    for (let i = 1; i < N; i++) {
+      const u = 1 - i / N;
+      const roadOpen = Math.exp(-Math.pow((u * PH - 680) / 56, 2)) * 2.4;
+      const wob = Math.sin(u * 21.4 + 2.4) * 1.4 + (rng() - 0.5) * 1.9;
+      innerPts.push([OX + (8.6 - roadOpen + wob), OY + u * PH]);
+    }
   }
 
-  // Outer irregular rock contour (chipped on top, bottom, and #01 left; flush at OX+PW seam!)
   const outerPts = [];
   for (let i = 0; i <= N; i++) {
     const u = i / N;
-    outerPts.push([ox0 + u * (ox1 - ox0), oy0 + (rng() - 0.5) * 2.2]);
+    const seamFade = openLeft ? Math.min(1, u * 6) : openRight ? Math.min(1, (1 - u) * 6) : 1;
+    outerPts.push([ox0 + u * (ox1 - ox0), oy0 + (rng() - 0.5) * 2.2 * seamFade]);
   }
   outerPts.push([ox1, oy0]);
   outerPts.push([ox1, oy1]);
   for (let i = 0; i <= N; i++) {
     const u = 1 - i / N;
-    outerPts.push([ox0 + u * (ox1 - ox0), oy1 + (rng() - 0.5) * 1.8]);
+    const seamFade = openLeft ? Math.min(1, u * 6) : openRight ? Math.min(1, (1 - u) * 6) : 1;
+    outerPts.push([ox0 + u * (ox1 - ox0), oy1 + (rng() - 0.5) * 1.8 * seamFade]);
   }
-  for (let i = 1; i < N; i++) {
-    const u = 1 - i / N;
-    outerPts.push([ox0 + (rng() - 0.5) * 2.6, oy0 + u * (oy1 - oy0)]);
+  if (!openLeft) {
+    for (let i = 1; i < N; i++) {
+      const u = 1 - i / N;
+      outerPts.push([ox0 + (rng() - 0.5) * 2.6, oy0 + u * (oy1 - oy0)]);
+    }
   }
 
   ctx.save();
+  ctx.beginPath();
+  ctx.rect(openLeft ? OX : 0, 0, openLeft ? PW : openRight ? OX + PW : BAKE_W, BAKE_H);
+  ctx.clip();
+
   ctx.beginPath();
   ctx.moveTo(outerPts[0][0], outerPts[0][1]);
   for (let i = 1; i < outerPts.length; i++) ctx.lineTo(outerPts[i][0], outerPts[i][1]);
@@ -409,8 +430,8 @@ function bakeSaharaFrame(ctx, rng) {
   ctx.closePath();
   ctx.clip('evenodd');
 
-  // Stratified Saharan sandstone base
-  const rockGrad = ctx.createLinearGradient(ox0, oy0, ox1, oy1);
+  // Stratified Saharan sandstone base (vertical gradient so `x = 0` seam matches 100%!)
+  const rockGrad = ctx.createLinearGradient(0, oy0, 0, oy1);
   rockGrad.addColorStop(0.0, '#6e391f');
   rockGrad.addColorStop(0.32, '#874928');
   rockGrad.addColorStop(0.68, '#5a2c17');
@@ -418,7 +439,6 @@ function bakeSaharaFrame(ctx, rng) {
   ctx.fillStyle = rockGrad;
   ctx.fillRect(ox0 - 4, oy0 - 4, ox1 - ox0 + 8, oy1 - oy0 + 8);
 
-  // Sedimentary sandstone strata & wind-eroded desert varnish speckles
   for (let s = 0; s < 140; s++) {
     const sy = oy0 + rng() * (oy1 - oy0);
     const sx = ox0 + rng() * (ox1 - ox0);
@@ -434,7 +454,6 @@ function bakeSaharaFrame(ctx, rng) {
   for (let g = 0; g < 420; g++) {
     const gx = ox0 + rng() * (ox1 - ox0);
     const gy = oy0 + rng() * (oy1 - oy0);
-    // Concentrate speckles near the border strips
     if (gx > OX + 14 && gx < OX + PW - 14 && gy > OY + 14 && gy < OY + PH - 14) continue;
     ctx.fillStyle =
       rng() > 0.5 ? 'rgba(238, 198, 145, 0.22)' : 'rgba(32, 14, 8, 0.32)';
@@ -442,15 +461,32 @@ function bakeSaharaFrame(ctx, rng) {
   }
   ctx.restore();
 
-  // Chipped inner rock ledge shadow + warm ochre sun-lit facet
+  // Chipped inner rock ledge shadow ONLY along actual rock edges (NEVER across `x = 0` open seam!)
   ctx.save();
+  ctx.beginPath();
+  ctx.rect(openLeft ? OX : 0, 0, openLeft ? PW : openRight ? OX + PW : BAKE_W, BAKE_H);
+  ctx.clip();
   ctx.lineJoin = 'round';
   ctx.strokeStyle = 'rgba(24, 11, 5, 0.68)';
   ctx.lineWidth = 1.8;
   ctx.beginPath();
+  // Top inner edge (`0..N`)
   ctx.moveTo(innerPts[0][0], innerPts[0][1]);
-  for (let i = 1; i < innerPts.length; i++) ctx.lineTo(innerPts[i][0], innerPts[i][1]);
-  ctx.closePath();
+  for (let i = 1; i <= N; i++) ctx.lineTo(innerPts[i][0], innerPts[i][1]);
+  if (!openRight) {
+    for (let i = N + 1; i <= 2 * N; i++) ctx.lineTo(innerPts[i][0], innerPts[i][1]);
+  } else {
+    ctx.moveTo(innerPts[N + 1][0], innerPts[N + 1][1]);
+  }
+  const botStart = openRight ? N + 2 : 2 * N + 1;
+  const botEnd = botStart + N - 1;
+  for (let i = botStart; i <= botEnd && i < innerPts.length; i++) {
+    ctx.lineTo(innerPts[i][0], innerPts[i][1]);
+  }
+  if (!openLeft) {
+    for (let i = botEnd + 1; i < innerPts.length; i++) ctx.lineTo(innerPts[i][0], innerPts[i][1]);
+    ctx.lineTo(innerPts[0][0], innerPts[0][1]);
+  }
   ctx.stroke();
 
   ctx.strokeStyle = 'rgba(224, 174, 118, 0.36)';
@@ -1860,7 +1896,7 @@ function getBakedPanelFrame(kit, scene) {
       // Panel 1 may extend slightly left into empty pre-scroll wall; panels 2..20 stay >= OX (x=0)
       // and <= OX+PW (x=1000) so adjacent frames meet cleanly at k*1000 with zero overwrite!
       ctx.save();
-      const clipX0 = scene.num === 1 ? 2 : OX;
+      const clipX0 = scene.id === 's01_sahara_pre' ? 2 : OX;
       const clipX1 = scene.num === 20 ? bw - 2 : OX + PW;
       ctx.beginPath();
       ctx.rect(clipX0, 0, clipX1 - clipX0, bh);
@@ -1869,7 +1905,10 @@ function getBakedPanelFrame(kit, scene) {
       switch (scene.id) {
         // Family 1: `stone_arch`
         case 's01_sahara':
-          bakeSaharaFrame(ctx, rng);
+          bakeSaharaFrame(ctx, rng, 'right_open_left');
+          break;
+        case 's01_sahara_pre':
+          bakeSaharaFrame(ctx, rng, 'left_open_right');
           break;
         case 's02_egypt':
           bakeEgyptFrame(ctx, rng);

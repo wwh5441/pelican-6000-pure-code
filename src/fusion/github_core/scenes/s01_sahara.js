@@ -2080,6 +2080,23 @@ function drawSaharaPelicanAndBike(ctx, kit, toothGrid, rig, localT) {
   ctx.restore();
 }
 
+export function renderSaharaPelicanOnly(ctx, kit, pelicanLocalX, pedalAngle = 0, speedScale = 1.0, localT = 0) {
+  if (pelicanLocalX <= -240 || pelicanLocalX >= PANEL_SIZE + 240) return;
+  const { toothGrid } = getSaharaRockAssets(kit);
+  const { y: roadY, slope } = kit.sampleRoad(clamp(pelicanLocalX, 0, PANEL_SIZE), 0);
+  const rig = computePelicanRig({
+    x: pelicanLocalX,
+    y: roadY,
+    pedalAngle,
+    scale: 1.0,
+    slope,
+    speedScale,
+    poseMode: 'normal',
+    time: localT,
+  });
+  drawSaharaPelicanAndBike(ctx, kit, toothGrid, rig, localT);
+}
+
 export function render(kit, slot, scene, params) {
   const {
     localT = 0,
@@ -2087,6 +2104,8 @@ export function render(kit, slot, scene, params) {
     pedalAngle = 0,
     speedScale = 1.0,
     isOutroThumbnail = false,
+    hidePelican = false,
+    includeLeftOutcrop = false,
   } = params;
 
   const g = slot.g2d;
@@ -2106,10 +2125,10 @@ export function render(kit, slot, scene, params) {
   }
 
   // 2. Dynamic Tassili Bovidian Cattle & Pastoralist Herders on Elevated Terraces (y = 504..544)
-  drawTassiliHerdAndHerders(ctx, kit, toothGrid, localT, pelicanLocalX, isOutroThumbnail);
+  drawTassiliHerdAndHerders(ctx, kit, toothGrid, localT, hidePelican ? -9999 : pelicanLocalX, isOutroThumbnail);
 
   // 3. Mineral-Pigment Pelican & Fire-Bent Acacia Bow-Beam + Knapped Stone-Wheel Bicycle along y = 680
-  if (pelicanLocalX > -240 && pelicanLocalX < PANEL_SIZE + 240) {
+  if (!hidePelican && pelicanLocalX > -240 && pelicanLocalX < PANEL_SIZE + 240) {
     const { y: roadY, slope } = kit.sampleRoad(clamp(pelicanLocalX, 0, PANEL_SIZE), 0);
     const rig = computePelicanRig({
       x: pelicanLocalX,
@@ -2124,15 +2143,17 @@ export function render(kit, slot, scene, params) {
     drawSaharaPelicanAndBike(ctx, kit, toothGrid, rig, localT);
   }
 
-  // 4. Rough Foreground Cave-Mouth Sandstone Corner Outcrops (rock-tooth polygon edges)
+  // 4. Rough Foreground Cave-Mouth Sandstone Corner Outcrops (kept off `x = 0` internal seam!)
   const fgRng = kit.makePRNG(9911);
-  fillRockToothPoly(
-    ctx,
-    [[0, PANEL_SIZE], [0, 892], [38, 906], [76, 942], [132, PANEL_SIZE]],
-    toothGrid,
-    fgRng,
-    { color: '#240f07', coreAlpha: 0.56, edgeWidth: 4.0, edgeSkip: 0.55, pinholeCount: 14 }
-  );
+  if (includeLeftOutcrop || isOutroThumbnail) {
+    fillRockToothPoly(
+      ctx,
+      [[0, PANEL_SIZE], [0, 892], [38, 906], [76, 942], [132, PANEL_SIZE]],
+      toothGrid,
+      fgRng,
+      { color: '#240f07', coreAlpha: 0.56, edgeWidth: 4.0, edgeSkip: 0.55, pinholeCount: 14 }
+    );
+  }
   fillRockToothPoly(
     ctx,
     [[PANEL_SIZE, PANEL_SIZE], [868, PANEL_SIZE], [924, 940], [964, 904], [PANEL_SIZE, 886]],

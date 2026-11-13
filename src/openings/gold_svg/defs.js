@@ -291,6 +291,12 @@ export function buildGoldForgeDefs(svgRoot) {
       <rect width="4.6" height="4.6" fill="#120f0c"/>
       <rect x="0.25" y="0.25" width="4.1" height="4.1" rx="0.52" fill="#ffe188"/>
     </pattern>
+
+    <linearGradient id="gf-crest-gold" x1="0%" y1="6%" x2="0%" y2="95%">
+      <stop offset="0%" stop-color="#ead092"/>
+      <stop offset="50%" stop-color="#d4af63"/>
+      <stop offset="100%" stop-color="#b58b3f"/>
+    </linearGradient>
   `;
 
   // Dynamic `/` slanted clipPaths for the 3 printmaking strips

@@ -18,6 +18,7 @@ async function main() {
     forgeStrikes,
     lyricChoreo,
     accordionDoc,
+    codePayloadStory,
     audioManifest,
   ] = await Promise.all([
     'film.json',
@@ -27,6 +28,7 @@ async function main() {
     'forge_strikes.json',
     'lyric_choreography.json',
     'opening_accordion.json',
+    'code_payload_story.json',
     'audio/manifest.json',
   ].map(read));
 
@@ -48,7 +50,8 @@ async function main() {
     clock,
     forgeStrikes,
     lyricChoreo,
-    accordionDoc
+    accordionDoc,
+    codePayloadStory
   );
 
   await renderer.init();

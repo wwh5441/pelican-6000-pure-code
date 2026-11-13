@@ -52,12 +52,13 @@ function drawCrispMuseumPlaque2D(ctx, scene, cx, topY, maxW, isActive) {
   const label = `${numStr} · ${scene.zh}  ｜  ${scene.era}`;
 
   ctx.save();
-  ctx.font = '800 19.5px "PelicanSerif", "CarbonSerif", serif';
+  ctx.font = '900 25.5px "PelicanSerif", "CarbonSerif", serif';
   const textW = ctx.measureText(label).width;
-  const pw = Math.min(maxW, Math.max(280, Math.ceil(textW + 52)));
-  const ph = 38;
+  const capW = Math.min(VIEW_W - 44, Math.max(maxW, 568));
+  const pw = Math.min(capW, Math.max(348, Math.ceil(textW + 58)));
+  const ph = 48;
   const px = cx - pw * 0.5;
-  const py = topY;
+  const py = Math.min(topY, VIEW_H - ph - 5);
 
   if (px + pw < -20 || px > VIEW_W + 20 || py > VIEW_H + 4) {
     ctx.restore();
@@ -145,15 +146,26 @@ export function renderMuseumGalleryOptics2D(ctx, cam, visiblePanels, activeScene
   }
 
   // 2. Per-Panel Museum Optics, Brass Picture Lamps & Crisp 4K Curator Plaques
+  const hasSaharaPre = visiblePanels.some((p) => p.scene.id === 's01_sahara_pre');
   for (const { scene } of visiblePanels) {
+    if (scene.id === 's01_sahara_pre') continue;
     if (scene.id === 's19_shortvideo' && cam.surroundDim > 0.55) continue;
 
-    const sx = worldToScreenX(scene.worldX0);
-    const sw = PANEL_SIZE * scale;
+    const isContinuousSahara = scene.id === 's01_sahara' && hasSaharaPre;
+    const sx = worldToScreenX(isContinuousSahara ? -PANEL_SIZE : scene.worldX0);
+    const sw = (isContinuousSahara ? PANEL_SIZE * 2 : PANEL_SIZE) * scale;
     const sy = panelTopY;
     const sh = panelBotY - panelTopY;
 
     const isActive = scene.index === activeSceneIndex;
+    const smoothSlide = isContinuousSahara
+      ? Math.max(0, Math.min(1, cam.camX / 500))
+      : 1;
+    const sCurve = smoothSlide * smoothSlide * (3 - 2 * smoothSlide);
+    const featureCx = isContinuousSahara
+      ? VIEW_W * 0.5 + (worldToScreenX(500) - VIEW_W * 0.5) * sCurve
+      : sx + sw * 0.5;
+    const featureW = PANEL_SIZE * scale;
 
     // A. Subtle peripheral museum chiaroscuro on inactive flanking paintings
     if (!isActive && cam.surroundDim < 0.5) {
@@ -188,7 +200,7 @@ export function renderMuseumGalleryOptics2D(ctx, cam, visiblePanels, activeScene
 
     // C. Overhead 3D Brushed-Brass Picture Lamp + 2900K Volumetric Wash Cone
     if (sy > 10 && cam.surroundDim < 0.65) {
-      const lampCx = sx + sw * 0.5;
+      const lampCx = featureCx;
       const lampY = Math.max(7, sy - 12 * Math.min(1.15, scale / 0.63));
       const hoodW = 118 * scale;
       const hoodH = 11 * scale;
@@ -202,7 +214,7 @@ export function renderMuseumGalleryOptics2D(ctx, cam, visiblePanels, activeScene
         6,
         lampCx,
         sy + sh * 0.38,
-        sw * 0.68
+        featureW * 0.78
       );
       cone.addColorStop(0, `rgba(255, 224, 154, ${(0.18 * intensity).toFixed(3)})`);
       cone.addColorStop(0.38, `rgba(255, 210, 128, ${(0.075 * intensity).toFixed(3)})`);
@@ -211,8 +223,8 @@ export function renderMuseumGalleryOptics2D(ctx, cam, visiblePanels, activeScene
       ctx.beginPath();
       ctx.moveTo(lampCx - hoodW * 0.48, lampY + hoodH * 0.5);
       ctx.lineTo(lampCx + hoodW * 0.48, lampY + hoodH * 0.5);
-      ctx.lineTo(sx + sw + 28, sy + sh * 0.85);
-      ctx.lineTo(sx - 28, sy + sh * 0.85);
+      ctx.lineTo(lampCx + featureW * 0.5 + 28, sy + sh * 0.85);
+      ctx.lineTo(lampCx - featureW * 0.5 - 28, sy + sh * 0.85);
       ctx.closePath();
       ctx.fill();
       ctx.restore();
@@ -243,7 +255,7 @@ export function renderMuseumGalleryOptics2D(ctx, cam, visiblePanels, activeScene
 
     // D. High-Contrast 4K Museum Curator Plaque right below frame (`y = frameBotY + 3`)
     if (cam.surroundDim < 0.65 && frameBotY < VIEW_H - 18) {
-      drawCrispMuseumPlaque2D(ctx, scene, sx + sw * 0.5, frameBotY + 2, sw * 0.86, isActive);
+      drawCrispMuseumPlaque2D(ctx, scene, featureCx, frameBotY + 2, featureW * 0.86, isActive);
     }
   }
 

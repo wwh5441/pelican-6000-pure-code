@@ -22,12 +22,12 @@ import {
   drawInteractivePillButton,
 } from './ornaments.js';
 
-const SAFE_X0 = 38;
-const SAFE_X1 = 922;
-const ACTIVE_X0 = 188;
-const ACTIVE_X1 = 772;
-const SCENE_Y0 = 46;
-const SCENE_Y1 = 644; // Guarantees bottom pixel (glyph + stroke + shadow) <= 652 < 654 (museum plaque at 668..714)
+const SAFE_X0 = 36;
+const SAFE_X1 = 924;
+const ACTIVE_X0 = 146;
+const ACTIVE_X1 = 814;
+const SCENE_Y0 = 58; // Keeps >=14px clearance below top Download Loader Capsule (`y = 6..42`)
+const SCENE_Y1 = 638; // Guarantees bottom pixel (glyph + stroke + shadow) <= 654 < 666 (48px museum plaque at 666..714)
 
 const LIGHT_PAPER_SCENES = new Set(['tang', 'song', 'qingming', 'bada', 'ukiyoe', 'chat']);
 
@@ -66,7 +66,7 @@ function measureFittedRow(ctx, items, basePx, heroMult, fontFam, maxW, padNormal
   const build = (scale) => {
     let totalW = 0;
     const metrics = items.map((g) => {
-      const px = Math.max(24, Math.round(basePx * scale * (g.isHero ? heroMult : 1.0)));
+      const px = Math.max(36, Math.round(basePx * scale * (g.isHero ? heroMult : 1.0)));
       ctx.font = `900 ${px}px ${fontFam}`;
       const gw = ctx.measureText(g.ch).width + (g.isHero ? padHero : padNormal) * scale;
       totalW += gw;
@@ -203,7 +203,7 @@ export function renderSpatialLyricShot(ctx, state) {
   const { t, line, shot, sceneId = '', alpha, progress, beat, anvil, pelPos } = state;
   const fontFam = resolveFontFamily(shot.font);
   const accent = shot.accent || '#e87a3d';
-  const basePx = shot.size || 56;
+  const basePx = Math.round((shot.size || 56) * 1.28);
   const { lightInk, darkInkColor } = resolveInkStyle(shot, sceneId);
 
   ctx.save();
@@ -224,18 +224,18 @@ export function renderSpatialLyricShot(ctx, state) {
     shot.layout === 'beak_caliper' ||
     shot.layout === 'chat_bubbles'
   ) {
-    const startX = clamp(shot.x, ACTIVE_X0, 260);
-    // Reserve `[544..772]` inside #17 active panel when IM bubbles are stacked on the right
+    const startX = clamp(shot.x - 24, ACTIVE_X0, 240);
+    // Reserve `[542..808]` inside #17 active panel when IM bubbles are stacked on the right
     const maxRight = shot.ornament === 'im_stack' ? 536 : ACTIVE_X1;
-    const availW = Math.max(260, maxRight - startX);
+    const availW = Math.max(296, maxRight - startX);
 
     const fittedRows = clauses.map((cl) =>
-      measureFittedRow(ctx, cl.items, basePx, 1.2, fontFam, availW, 3, 5.5)
+      measureFittedRow(ctx, cl.items, basePx, 1.18, fontFam, availW, 3, 5.5)
     );
-    const maxRowW = Math.max(...fittedRows.map((r) => r.totalW), 160);
-    const rowStep = Math.min(72, Math.round(basePx * 1.2));
-    const minTopY = shot.ornament === 'counter_badge' ? SCENE_Y0 + 50 : SCENE_Y0 + 28;
-    const maxStartY = SCENE_Y1 - 30 - Math.max(0, clauses.length - 1) * rowStep;
+    const maxRowW = Math.max(...fittedRows.map((r) => r.totalW), 180);
+    const rowStep = Math.min(88, Math.round(basePx * 1.18));
+    const minTopY = shot.ornament === 'counter_badge' ? SCENE_Y0 + 62 : SCENE_Y0 + 34;
+    const maxStartY = SCENE_Y1 - 36 - Math.max(0, clauses.length - 1) * rowStep;
     const startY = clamp(shot.y, minTopY, Math.max(minTopY, maxStartY));
 
     // Reveal-progressive subtle cushion ONLY on dark scenes (never smears soot on Xuan paper / silk / white UI!)
@@ -247,9 +247,9 @@ export function renderSpatialLyricShot(ctx, state) {
             ctx,
             span.cx,
             startY + ci * rowStep,
-            span.width * 0.56 + 28,
-            38,
-            0.28
+            span.width * 0.56 + 32,
+            44,
+            0.30
           );
         }
       }
@@ -263,21 +263,21 @@ export function renderSpatialLyricShot(ctx, state) {
     } else if (shot.ornament === 'im_stack') {
       drawChatBubbleStack(ctx, shot.sideBubbles, progress, accent);
     } else if (shot.ornament === 'counter_badge') {
-      const badgeY = Math.max(SCENE_Y0 - 4, startY - 54);
+      const badgeY = Math.max(SCENE_Y0 - 2, startY - 64);
       ctx.save();
-      ctx.fillStyle = lightInk ? 'rgba(14, 11, 16, 0.88)' : 'rgba(250, 243, 228, 0.94)';
+      ctx.fillStyle = lightInk ? 'rgba(14, 11, 16, 0.90)' : 'rgba(250, 243, 228, 0.96)';
       ctx.strokeStyle = accent;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.9;
       ctx.beginPath();
-      ctx.roundRect(startX, badgeY, 212, 28, 6);
+      ctx.roundRect(startX, badgeY, 286, 38, 8);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = lightInk ? accent : '#9e2a1c';
-      ctx.font = '800 15px "CarbonMono", monospace';
+      ctx.font = '800 20.5px "CarbonMono", monospace';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       const trips = Math.min(6000, Math.round(smooth(clamp(progress * 1.4, 0, 1)) * 6000));
-      ctx.fillText(`「第 ${String(trips).padStart(4, '0')} / 6000 趟」`, startX + 11, badgeY + 14.5);
+      ctx.fillText(`「第 ${String(trips).padStart(4, '0')} / 6000 趟」`, startX + 13, badgeY + 19.5);
       ctx.restore();
     }
 
@@ -448,7 +448,7 @@ export function renderSpatialLyricShot(ctx, state) {
         const sealU = smooth(clamp((progress - 0.40) * 3.4, 0, 1));
         ctx.save();
         ctx.globalAlpha *= sealU;
-        drawCarvedSeal(ctx, colX, yCursor + 18, 42, shot.seal, SCENE_Y1);
+        drawCarvedSeal(ctx, colX, yCursor + 22, 54, shot.seal, SCENE_Y1);
         ctx.restore();
       }
     }
@@ -528,36 +528,36 @@ export function renderSpatialLyricShot(ctx, state) {
     const fittedRows = clauses.map((cl) =>
       measureFittedRow(ctx, cl.items, basePx, 1.15, fontFam, maxInnerW, 3, 5)
     );
-    const widest = Math.max(...fittedRows.map((r) => r.totalW), 260);
-    const rowStep = Math.round(Math.min(58, basePx * 1.14));
-    const headerH = 28;
-    const boxW = clamp(widest + 44, isCRT ? 390 : 410, maxFrameW);
-    const boxH = headerH + fittedRows.length * rowStep + 24;
-    const rawBx = isCRT ? shot.x : shot.x - boxW * 0.5;
+    const widest = Math.max(...fittedRows.map((r) => r.totalW), 320);
+    const rowStep = Math.round(Math.min(74, basePx * 1.14));
+    const headerH = 36;
+    const boxW = clamp(widest + 48, isCRT ? 460 : 480, maxFrameW);
+    const boxH = headerH + fittedRows.length * rowStep + 26;
+    const rawBx = isCRT ? shot.x - 18 : shot.x - boxW * 0.5;
     const bx = clamp(rawBx, ACTIVE_X0, ACTIVE_X1 - boxW);
     const by = clamp(shot.y - 20, SCENE_Y0, SCENE_Y1 - boxH);
 
     ctx.save();
     ctx.fillStyle = isCRT ? 'rgba(6, 22, 14, 0.90)' : 'rgba(16, 15, 34, 0.92)';
     ctx.strokeStyle = accent;
-    ctx.lineWidth = isCRT ? 1.9 : 2.8;
+    ctx.lineWidth = isCRT ? 2.1 : 3.0;
     ctx.fillRect(bx, by, boxW, boxH);
     if (isCRT) ctx.setLineDash([8, 4]);
     ctx.strokeRect(bx, by, boxW, boxH);
     ctx.setLineDash([]);
 
     // Dedicated header bar with hairline separator so glyphs NEVER collide with header text!
-    ctx.fillStyle = isCRT ? 'rgba(57, 255, 122, 0.10)' : 'rgba(255, 216, 77, 0.12)';
+    ctx.fillStyle = isCRT ? 'rgba(57, 255, 122, 0.12)' : 'rgba(255, 216, 77, 0.14)';
     ctx.fillRect(bx + 1, by + 1, boxW - 2, headerH - 1);
-    ctx.strokeStyle = isCRT ? 'rgba(110, 255, 158, 0.32)' : 'rgba(255, 216, 77, 0.36)';
-    ctx.lineWidth = 1.0;
+    ctx.strokeStyle = isCRT ? 'rgba(110, 255, 158, 0.36)' : 'rgba(255, 216, 77, 0.40)';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(bx + 1, by + headerH);
     ctx.lineTo(bx + boxW - 1, by + headerH);
     ctx.stroke();
 
     ctx.fillStyle = accent;
-    ctx.font = '800 13px "CarbonMono", monospace';
+    ctx.font = '800 17.5px "CarbonMono", monospace';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     const headerText = isCRT
@@ -729,15 +729,15 @@ export function renderSpatialLyricShot(ctx, state) {
   }
 
   const fittedRows = clauses.map((cl) =>
-    measureFittedRow(ctx, cl.items, basePx, 1.2, fontFam, maxW, 3, 5.5)
+    measureFittedRow(ctx, cl.items, basePx, 1.18, fontFam, maxW, 3, 5.5)
   );
-  const rowStep = Math.min(72, Math.round(basePx * 1.2));
-  const maxStartY = SCENE_Y1 - 34 - Math.max(0, fittedRows.length - 1) * rowStep;
-  const startY = clamp(shot.y, SCENE_Y0 + 36, Math.max(SCENE_Y0 + 36, maxStartY));
+  const rowStep = Math.min(88, Math.round(basePx * 1.18));
+  const maxStartY = SCENE_Y1 - 38 - Math.max(0, fittedRows.length - 1) * rowStep;
+  const startY = clamp(shot.y, SCENE_Y0 + 40, Math.max(SCENE_Y0 + 40, maxStartY));
 
   for (let ci = 0; ci < fittedRows.length; ci += 1) {
     const row = fittedRows[ci];
-    const sealReserve = shot.ornament === 'rubbing_seal' && ci === fittedRows.length - 1 ? 54 : 0;
+    const sealReserve = shot.ornament === 'rubbing_seal' && ci === fittedRows.length - 1 ? 66 : 0;
     const cx = clamp(
       shot.x,
       minBoundX + 4 + row.totalW * 0.5,
@@ -784,7 +784,7 @@ export function renderSpatialLyricShot(ctx, state) {
 
     if (ci === fittedRows.length - 1) {
       if (shot.ornament === 'rubbing_seal' && progress > 0.35) {
-        drawCarvedSeal(ctx, cx + row.totalW * 0.5 + 30, rowY - 2, 42, '拓印', SCENE_Y1);
+        drawCarvedSeal(ctx, cx + row.totalW * 0.5 + 36, rowY - 2, 54, '拓印', SCENE_Y1);
       } else if (shot.ornament === 'hammer_stamp') {
         drawHammerSparks(ctx, cx, rowY, row.totalW, anvil, progress, accent);
       } else if (shot.ornament === 'smile_arc') {

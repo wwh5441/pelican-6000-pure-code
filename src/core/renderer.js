@@ -32,6 +32,7 @@ import { renderThresholdMicroPhysics } from '../fusion/github_core/kit/transitio
 import { renderSongAnvilAndBellFX } from '../fusion/github_core/kit/anvil_fx.js';
 import { computePelicanRig, drawRig2D } from '../fusion/github_core/rig/pelican.js';
 import { renderScenePanel } from '../fusion/github_core/scenes/index.js';
+import { renderSaharaPelicanOnly } from '../fusion/github_core/scenes/s01_sahara.js';
 import { renderOutro } from '../fusion/github_core/scenes/outro.js';
 import { getCodexSceneId } from '../fusion/era_enhancements.js';
 import { renderMuseumGalleryOptics2D } from '../fusion/gallery_lighting.js';
@@ -43,10 +44,15 @@ import {
   renderAccordionIntroOverlay,
 } from '../openings/accordion_intro.js';
 import { LyricPainter } from '../components/lyrics.js';
+import { CodeSizeHud } from '../components/code_size_hud.js';
 
-export const RENDER_SCALE = 2;
-export const FILM_W = VIEW_W * RENDER_SCALE; // 1920
-export const FILM_H = VIEW_H * RENDER_SCALE; // 1440
+const _urlScale =
+  typeof window !== 'undefined'
+    ? Number(new URLSearchParams(window.location.search).get('scale'))
+    : 0;
+export const RENDER_SCALE = _urlScale === 3 ? 3 : 2;
+export const FILM_W = VIEW_W * RENDER_SCALE; // 2880 (?scale=3) or 1920 (default)
+export const FILM_H = VIEW_H * RENDER_SCALE; // 2160 (?scale=3) or 1440 (default)
 
 function getPostCodeExtension(kit) {
   return kit.bake2D(
@@ -173,9 +179,12 @@ export class FilmRenderer {
     clock,
     forgeStrikesDoc = null,
     lyricChoreographyDoc = null,
-    accordionDoc = null
+    accordionDoc = null,
+    codePayloadStoryDoc = null
   ) {
     this.canvas = canvas;
+    if (this.canvas.width !== FILM_W) this.canvas.width = FILM_W;
+    if (this.canvas.height !== FILM_H) this.canvas.height = FILM_H;
     this.ctx = canvas.getContext('2d', { alpha: false });
     this.film = film;
     this.features = features;
@@ -186,6 +195,7 @@ export class FilmRenderer {
     this.forgeTimeline = forgeStrikesDoc ? buildForgeTimeline(forgeStrikesDoc) : null;
     this.forgeSvgBank = null;
     this.liveSvgStage = new LiveForgeSvgStage();
+    this.codeSizeHud = new CodeSizeHud(codePayloadStoryDoc, RENDER_SCALE);
     this.accordionDoc = accordionDoc;
     this.drawerState = {
       forgePinnedIndex: null,
@@ -324,6 +334,7 @@ export class FilmRenderer {
 
     await Promise.all([
       this.liveSvgStage.init(this.canvas.parentElement),
+      this.codeSizeHud.init(this.canvas.parentElement),
       preloadIntroDecorAssets(),
     ]);
     this.drawerState.liveSvgMounted = Boolean(this.liveSvgStage.ready);
@@ -438,107 +449,104 @@ export class FilmRenderer {
             p.background(17, 15, 13);
           } else {
             cam = getCameraState(canonicalT, sync.anvilShock);
-          pelWorld = getPelicanWorldState(canonicalT);
-          const visibleIndices = getVisiblePanelIndices(cam);
+            pelWorld = getPelicanWorldState(canonicalT);
+            const handoffEndT = this.accordionDoc?.handoffEndRealT ?? 11.447;
+            const hideWorldPelican = canonicalT < INTRO_SEC && t < handoffEndT - 0.26;
+            const visibleIndices = getVisiblePanelIndices(cam);
 
-          renderedPanels = visibleIndices.map((panelIdx, slotIdx) => {
-            const scene = SCENES[panelIdx];
-            const slot = this.kit.getSlot(slotIdx);
-            slot.usedFb = false;
-            slot.g2d.clear();
+            renderedPanels = visibleIndices.map((panelIdx, slotIdx) => {
+              const scene = SCENES[panelIdx];
+              const slot = this.kit.getSlot(slotIdx);
+              slot.usedFb = false;
+              slot.g2d.clear();
 
-            const rawLocalT = canonicalT - scene.t0;
-            const panelLocalT = clamp(rawLocalT, 0, 6.0);
-            const pelicanLocalX = pelWorld.worldX - scene.worldX0;
+              const rawLocalT = canonicalT - scene.t0;
+              const panelLocalT = clamp(rawLocalT, 0, 6.0);
+              const pelicanLocalX = pelWorld.worldX - scene.worldX0;
 
-            renderSceneWithAssets(this.kit, slot, scene, {
-              t: canonicalT,
-              localT: panelLocalT,
-              rawLocalT,
-              pelicanLocalX,
-              pedalAngle: pelWorld.pedalAngle,
-              speedScale: pelWorld.speedScale,
-              isOutroThumbnail: false,
+              renderSceneWithAssets(this.kit, slot, scene, {
+                t: canonicalT,
+                localT: panelLocalT,
+                rawLocalT,
+                pelicanLocalX,
+                pedalAngle: pelWorld.pedalAngle,
+                speedScale: pelWorld.speedScale,
+                isOutroThumbnail: false,
+                hidePelican: hideWorldPelican,
+                includeLeftOutcrop: false,
+              });
+
+              return { scene, slot, mirrorFb: false };
             });
 
-            return { scene, slot, mirrorFb: false };
-          });
+            // Seamless Sahara Tassili rock-wall prologue panel filling `[-PANEL_SIZE, 0]` (100% continuous 2000px cave wall)
+            if (cam.camX < 1200) {
+              const preSlot = this.kit.getSlot(3);
+              preSlot.usedFb = false;
+              preSlot.g2d.clear();
 
-          // Seamless Sahara Tassili rock-wall prologue panel filling `[-PANEL_SIZE, 0]` (zero left blank wall!)
-          if (cam.camX < 1200) {
-            const preSlot = this.kit.getSlot(3);
-            preSlot.usedFb = false;
-            preSlot.g2d.clear();
+              const s0RawLocalT = canonicalT - SCENES[0].t0;
+              const s0ClampedLocalT = clamp(s0RawLocalT, 0, 6.0);
+              renderSceneWithAssets(this.kit, preSlot, SCENES[0], {
+                t: canonicalT,
+                localT: s0ClampedLocalT,
+                rawLocalT: s0RawLocalT,
+                pelicanLocalX: -9999,
+                pedalAngle: 0,
+                speedScale: 1,
+                isOutroThumbnail: false,
+                hidePelican: true,
+                includeLeftOutcrop: false,
+              });
 
-            const s0RawLocalT = canonicalT - SCENES[0].t0;
-            renderSceneWithAssets(this.kit, preSlot, SCENES[0], {
-              t: canonicalT,
-              localT: clamp(s0RawLocalT, 0, 6.0),
-              rawLocalT: s0RawLocalT,
-              pelicanLocalX: -9999,
-              pedalAngle: 0,
-              speedScale: 1,
-              isOutroThumbnail: false,
-            });
+              const mCtx = this.edgeMirrorScratch.getContext('2d');
+              mCtx.clearRect(0, 0, PANEL_SIZE, PANEL_SIZE);
+              mCtx.drawImage(preSlot.g2d.canvas, 0, 0);
 
-            const mCtx = this.edgeMirrorScratch.getContext('2d');
-            mCtx.clearRect(0, 0, PANEL_SIZE, PANEL_SIZE);
-            mCtx.drawImage(preSlot.g2d.canvas, 0, 0);
-
-            const preCtx = preSlot.g2d.drawingContext;
-            preCtx.save();
-            preCtx.clearRect(0, 0, PANEL_SIZE, PANEL_SIZE);
-            preCtx.translate(PANEL_SIZE, 0);
-            preCtx.scale(-1, 1);
-            preCtx.drawImage(this.edgeMirrorScratch, 0, 0);
-            preCtx.restore();
-
-            if (pelWorld.visibleInScroll && pelWorld.worldX < 220) {
+              const preCtx = preSlot.g2d.drawingContext;
               preCtx.save();
-              if (this.assets?.character) {
-                const img = this.assets.character;
-                const fit = Math.min(240 / img.width, 240 / img.height);
-                const cw = img.width * fit;
-                const ch = img.height * fit;
-                preCtx.drawImage(
-                  img,
-                  pelWorld.worldX + PANEL_SIZE - cw * 0.5,
-                  ROAD_EDGE_Y - ch + 6,
-                  cw,
-                  ch
-                );
-              } else {
-                const preRig = computePelicanRig({
-                  x: pelWorld.worldX + PANEL_SIZE,
-                  y: ROAD_EDGE_Y,
-                  pedalAngle: pelWorld.pedalAngle,
-                  wheelAngle: pelWorld.worldX / 46,
-                  scale: 1.0,
-                  speedScale: pelWorld.speedScale,
-                  time: canonicalT,
-                });
-                drawRig2D(preCtx, preRig, {
-                  featherFill: '#f2e6cf',
-                  featherShade: '#d9be96',
-                  beakFill: '#d4842a',
-                  pouchFill: '#b84a1e',
-                  frameStroke: '#7a3e18',
-                  wheelStroke: '#4a2612',
-                  spokeStroke: '#8c5828',
-                  inkOutline: '#2b160c',
-                });
-              }
+              preCtx.clearRect(0, 0, PANEL_SIZE, PANEL_SIZE);
+              preCtx.translate(PANEL_SIZE, 0);
+              preCtx.scale(-1, 1);
+              preCtx.drawImage(this.edgeMirrorScratch, 0, 0);
               preCtx.restore();
-            }
 
-            const preScene = {
-              ...SCENES[0],
-              worldX0: -PANEL_SIZE,
-              num: 0,
-              index: -1,
-            };
-            renderedPanels.unshift({ scene: preScene, slot: preSlot, mirrorFb: true });
-          } else if (cam.camX > 18800) {
+              if (!hideWorldPelican && pelWorld.visibleInScroll && pelWorld.worldX < 240) {
+                preCtx.save();
+                if (this.assets?.character) {
+                  const img = this.assets.character;
+                  const fit = Math.min(240 / img.width, 240 / img.height);
+                  const cw = img.width * fit;
+                  const ch = img.height * fit;
+                  preCtx.drawImage(
+                    img,
+                    pelWorld.worldX + PANEL_SIZE - cw * 0.5,
+                    ROAD_EDGE_Y - ch + 6,
+                    cw,
+                    ch
+                  );
+                } else {
+                  renderSaharaPelicanOnly(
+                    preCtx,
+                    this.kit,
+                    pelWorld.worldX + PANEL_SIZE,
+                    pelWorld.pedalAngle,
+                    pelWorld.speedScale,
+                    s0ClampedLocalT
+                  );
+                }
+                preCtx.restore();
+              }
+
+              const preScene = {
+                ...SCENES[0],
+                id: 's01_sahara_pre',
+                worldX0: -PANEL_SIZE,
+                num: 0,
+                index: -1,
+              };
+              renderedPanels.unshift({ scene: preScene, slot: preSlot, mirrorFb: true });
+            } else if (cam.camX > 18800) {
             // Seamless Nano-OLED coordinate workbench epilogue panel filling `[20000, 21000]` (zero right blank wall!)
             const postSlot = this.kit.getSlot(3);
             postSlot.usedFb = false;
@@ -681,6 +689,15 @@ export class FilmRenderer {
             if (this.accordionDoc?.eraDrawers) {
               ensureIntroEraBackdrops(this.kit, renderSceneWithAssets, this.accordionDoc.eraDrawers);
             }
+            const handoffEndT = this.accordionDoc?.handoffEndRealT ?? 11.447;
+            const handoffTarget = cam && pelWorld ? {
+              x: VIEW_W * 0.5 + (pelWorld.worldX - cam.camX) * cam.scale,
+              y: VIEW_H * 0.5 + (ROAD_EDGE_Y - cam.camY) * cam.scale,
+              scale: cam.scale,
+              pedalAngle: pelWorld.pedalAngle,
+              speedScale: pelWorld.speedScale,
+              pelicanOverlayAlpha: 1 - smootherstep(handoffEndT - 0.26, handoffEndT - 0.04, t),
+            } : null;
             this.hiResOverlay.clear();
             drewIntro2D = renderAccordionIntroOverlay(
               this.kit,
@@ -690,7 +707,8 @@ export class FilmRenderer {
               this.forgeTimeline,
               this.forgeSvgBank,
               this.accordionDoc,
-              this.drawerState
+              this.drawerState,
+              handoffTarget
             );
           } else if (canonicalT >= outroStart - 0.14) {
             // #20 -> Outro Cross-Dissolve (`124.86s -> 125.14s`)
@@ -700,7 +718,7 @@ export class FilmRenderer {
               renderOutro(this.kit, this.hiResOverlay, canonicalT, renderSceneWithAssets);
               outroBlend2D = blend;
             }
-            }
+          }
           }
         });
       }
@@ -776,6 +794,9 @@ export class FilmRenderer {
         pelicanScreenPos
       );
       ctx.restore();
+
+      // 4. Continuous Pure-Code Download Track (`0.00s..168.88s`) + Post-Pelican File-Size Climax (`168.88s..174.64s`)
+      this.codeSizeHud.draw(t, sync);
     } catch (err) {
       this.errors.push({ scene: 'fusion_renderer', time: t, message: String(err?.stack || err) });
     }

@@ -1,25 +1,34 @@
-# 鹈鹕骑行 · 六千年（100% 纯代码音画全片）
+# 鹈鹕六千年的车 · Pure-Code Edition
 
-> **在线体验（GitHub Pages）**：https://wwh5441.github.io/pelican-6000-pure-code/  
-> **离线单文件包下载（1.93 MB ZIP）**：https://github.com/wwh5441/pelican-6000-pure-code/releases/latest
+零音频采样（0 MP3/WAV）、零外部位图（0 PNG/JPG）、零外置字体包（0 WOFF2/TTF）——由 **Hydrogen** 独立交付的一整部 **2 分 55 秒（174.64s）** 纯代码中文交互式视听长卷：涵盖铁匠铺矢量篆刻开场、穿越 20 个艺术史时代、Live Canvas/SVG 动态笔触渲染与浏览器 `AudioWorklet` 实时中文歌声/多轨器乐合成。
 
-本工程为 **零二进制文件（无 `.mp3` / `.wav` / `.lzpar` / `.png` / `.woff2`）** 的全代码音画融合播放器，直接融合：
-- **视觉全片引擎**：`carbon_music_film` 二十幕 WebGL + Canvas 程序化艺术史长卷、`LiveForgeSvgStage` 4K 打铁片头、12 时代风琴开场、7×3 谢幕展墙与动态歌词；印章与羽轮纹章转为纯矢量 `Path2D` 代码（[vector_emblems.js](./src/openings/vector_emblems.js)）；字体直接沿用本地系统通用字族（`serif` / `sans-serif` / `monospace`），不内置任何字体文件。
-- **极简零控件舞台**：移除全部底部进度条与按钮控件，仅保留居中 `4:3` 电影画幅；**点击屏幕 / 按 `Space`** 播放或暂停（支持双击/`F` 全屏、`M` 静音、`R` 重播、`←`/`→` 快退快进 5 秒）。
-- **音频合成引擎**：`鹈鹕骑行_纯代码合成` 已审批紧凑版四轨 `AudioWorklet` 实时重建引擎（[data/audio](./data/audio) 5 个纯 JS 参数模块，无音频文件）。
+- **在线直开（GitHub Pages）**：https://wwh5441.github.io/pelican-6000-pure-code/
+- **单文件离线包下载**：前往 [Releases 最新版](https://github.com/wwh5441/pelican-6000-pure-code/releases/latest) 下载 `pelican-6000-pure-code-single.zip`
 
-## 双击直开单文件版（推荐）
+## 本版资产体积
 
-直接双击或用 Chrome 打开 [鹈鹕骑行_纯代码全片_单文件版.html](./鹈鹕骑行_纯代码全片_单文件版.html)（`file://` 协议免服务端直接运行）；若修改模块化源码后需重新打包：
+- `鹈鹕骑行_纯代码全片_单文件版.zip`：`1.94 MB`（`2,033,318 bytes`）
+- `鹈鹕骑行_纯代码全片_单文件版.html`：`2.56 MiB`（`2,685,266 bytes`，单文件内嵌 Gzip-9 虚拟文件系统，浏览器可直接打开）
+
+## 播放交互控制
+
+极简零按钮播放器设计，点击画面即可开始合成播放：
+
+- **点击画面 / `Space`**：播放 / 暂停（首次交互解锁实时 `AudioWorklet` 合成器）
+- **双击画面 / `F`**：进入 / 退出全屏
+- **`M`**：静音切换
+- **`R`**：从头重播
+- **`←` / `→`**：快退 / 快进 `5` 秒
+
+## 本地运行与重新构建
+
+双击 [启动纯代码全片.command](./启动纯代码全片.command) 后在浏览器打开 `http://127.0.0.1:8922/`；如需重新打包单文件离线版，可运行：
 
 ```bash
 python3 ./tools/build_single_html.py
 ```
 
-## 本地模块化启动
+## 致敬与鸣谢
 
-```bash
-python3 ./server.py --port 8922 --open
-```
-
-或双击 [启动纯代码全片.command](./启动纯代码全片.command) 后在浏览器打开 `http://127.0.0.1:8922/`。
+- 原创测试命题源头：Simon Willison — *"A pelican riding a bicycle"*
+- 20 幕艺术史命题先行开源项目：[orbitoo/pelican-test](https://github.com/orbitoo/pelican-test)（及同源项目 [RoyceBella-commits/The-Pelican-Test](https://github.com/RoyceBella-commits/The-Pelican-Test)）
